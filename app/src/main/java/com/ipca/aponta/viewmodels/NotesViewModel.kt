@@ -12,8 +12,6 @@ import com.ipca.aponta.models.Note
 class NotesViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
-    // Estado da lista de notas (a UI vai "olhar" para aqui)
     var notes by mutableStateOf<List<Note>>(emptyList())
 
     init {
