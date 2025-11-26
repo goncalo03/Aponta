@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "519753733982",
+    "project_id": "aponta-ee7c6",
+    "storage_bucket": "aponta-ee7c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519753733982:android:aac6f6f5091f88438da1cf",
+        "android_client_info": {
+          "package_name": "com.ipca.aponta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGA6HmSwrTSqPknTcw_uG5VL5DvFRLeL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
