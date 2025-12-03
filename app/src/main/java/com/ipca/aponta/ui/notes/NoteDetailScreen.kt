@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ipca.aponta.ui.theme.NoteColors
-import com.ipca.aponta.ui.theme.getNoteColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,13 +44,11 @@ fun NoteDetailScreen(
     var showShareDialog by remember { mutableStateOf(false) }
     var emailToShare by remember { mutableStateOf("") }
 
-    val noteColor = getNoteColor(state.colorIndex)
-
     LaunchedEffect(noteId) {
         viewModel.loadNote(noteId)
     }
 
-    // --- DIALOG PARTILHA ---
+    // --- POPUP PARTILHA ---
     if (showShareDialog) {
         AlertDialog(
             onDismissRequest = { showShareDialog = false },
@@ -81,15 +77,13 @@ fun NoteDetailScreen(
                     } else {
                         Toast.makeText(context, "Escreve um email válido", Toast.LENGTH_SHORT).show()
                     }
-                }) {
-                    Text("Enviar")
-                }
+                }) { Text("Enviar") }
             },
             dismissButton = { TextButton(onClick = { showShareDialog = false }) { Text("Cancelar") } }
         )
     }
 
-    // --- DIALOG APAGAR ---
+    // --- POPUP APAGAR ---
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -110,6 +104,7 @@ fun NoteDetailScreen(
     }
 
     Scaffold(
+        // Fundo padrão do sistema (Branco/Escuro)
         containerColor = MaterialTheme.colorScheme.background,
 
         topBar = {
@@ -120,26 +115,17 @@ fun NoteDetailScreen(
                     IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Voltar") }
                 },
                 actions = {
-
-                    // --- PROTEÇÃO DE DONO (PARTILHA E APAGAR) ---
-                    // Apenas o dono pode ver estes botões
                     if (state.isOwner) {
                         IconButton(onClick = { showShareDialog = true }) {
                             Icon(Icons.Default.Share, contentDescription = "Partilhar")
                         }
                     }
-
-                    // Botão Cor (Todos podem mudar a cor)
                     IconButton(onClick = { showColorSheet = true }) {
-                        Icon(Icons.Default.Palette, contentDescription = "Cor")
+                        Icon(Icons.Default.Palette, contentDescription = "Mudar Cor")
                     }
-
-                    // Botão Editar (Todos podem editar o texto)
                     IconButton(onClick = { onNavigateToEdit(noteId) }) {
                         Icon(Icons.Default.Edit, contentDescription = "Editar")
                     }
-
-                    // Apenas o dono pode apagar
                     if (state.isOwner) {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Apagar", tint = MaterialTheme.colorScheme.error)
@@ -150,38 +136,52 @@ fun NoteDetailScreen(
         }
     ) { innerPadding ->
 
+        // --- CONTEÚDO (LIMPO, SEM COR DE FUNDO) ---
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(24.dp)
                 .fillMaxSize()
+                // REMOVIDO: .background(noteColor) -> Agora o fundo é limpo
                 .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = noteColor),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Text(text = state.title, style = MaterialTheme.typography.headlineMedium, color = Color.Black)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Divider(color = Color.Black.copy(alpha = 0.1f))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = state.content, style = MaterialTheme.typography.bodyLarge, color = Color.Black.copy(alpha = 0.8f))
+            if (state.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
+            } else {
+                // Título
+                Text(
+                    text = state.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground // Cor texto padrão
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Conteúdo
+                Text(
+                    text = state.content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground // Cor texto padrão
+                )
             }
         }
 
-        // Menu de Cores
+        // --- MENU DE CORES (Atualiza a DB, mas não muda este ecrã) ---
         if (showColorSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showColorSheet = false },
                 containerColor = Color(0xFF252525)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Escolher cor", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Escolher cor para a lista", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
+
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         itemsIndexed(NoteColors) { index, color ->
                             Box(
@@ -189,8 +189,14 @@ fun NoteDetailScreen(
                                     .size(50.dp)
                                     .clip(CircleShape)
                                     .background(color)
-                                    .border(width = if (state.colorIndex == index) 3.dp else 0.dp, color = if (state.colorIndex == index) Color.White else Color.Transparent, shape = CircleShape)
-                                    .clickable { viewModel.onColorChange(noteId, index) }
+                                    .border(
+                                        width = if (state.colorIndex == index) 3.dp else 0.dp,
+                                        color = if (state.colorIndex == index) Color.White else Color.Transparent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        viewModel.onColorChange(noteId, index)
+                                    }
                             )
                         }
                     }

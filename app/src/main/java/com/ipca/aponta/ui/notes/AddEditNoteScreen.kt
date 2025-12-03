@@ -25,19 +25,14 @@ fun AddEditNoteScreen(
 ) {
     val state = viewModel.uiState.value
 
-    // --- CORREÇÃO AQUI ---
-    // Usamos 'noteId?.let { id -> ... }' para garantir que o 'id' é String (e não String?)
     LaunchedEffect(noteId) {
-        noteId?.let { id ->
-            if (id != "new") {
-                viewModel.loadNote(id)
-            }
+        if (noteId != null) {
+            viewModel.loadNote(noteId)
         }
     }
 
     LaunchedEffect(state.isSaveSuccess) {
         if (state.isSaveSuccess) {
-            viewModel.resetSaveState() // Limpa o estado
             onNavigateBack()
         }
     }
@@ -100,20 +95,20 @@ fun AddEditNoteScreen(
                 .padding(horizontal = 24.dp)
         ) {
 
-            // 1. TÍTULO
+            // 1. TÍTULO (Reduzido de 48sp para 24sp)
             TextField(
                 value = state.title,
                 onValueChange = { viewModel.onTitleChange(it) },
                 placeholder = {
                     Text(
-                        "Title",
-                        style = TextStyle(fontSize = 48.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        "Título", // Alterei para Português
+                        style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     )
                 },
                 textStyle = TextStyle(
-                    fontSize = 48.sp,
+                    fontSize = 24.sp, // Tamanho mais contido
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Bold // Negrito para destacar
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
@@ -126,20 +121,21 @@ fun AddEditNoteScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // Reduzi o espaçamento
 
-            // 2. CONTEÚDO
+            // 2. CONTEÚDO (Reduzido de 23sp para 16sp)
             TextField(
                 value = state.content,
                 onValueChange = { viewModel.onContentChange(it) },
                 placeholder = {
                     Text(
-                        "Type something...",
-                        style = TextStyle(fontSize = 23.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        "Começa a escrever...",
+                        style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     )
                 },
                 textStyle = TextStyle(
-                    fontSize = 23.sp,
+                    fontSize = 16.sp, // Tamanho padrão de leitura
+                    lineHeight = 24.sp, // Espaçamento entre linhas confortável
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Normal
                 ),
