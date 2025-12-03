@@ -1,17 +1,11 @@
 package com.ipca.aponta.ui.notes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Palette // Ícone da paleta
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,10 +16,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ipca.aponta.ui.theme.NoteColors // Importa a tua lista de cores
-import com.ipca.aponta.ui.theme.getNoteColor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditNoteScreen(
     noteId: String? = null,
@@ -34,23 +25,25 @@ fun AddEditNoteScreen(
 ) {
     val state = viewModel.uiState.value
 
-    // Estado para controlar se o menu de cores está visível
-    var showColorSheet by remember { mutableStateOf(false) }
-
-    // Cor atual selecionada (para pintar o fundo do ecrã)
-    val currentNoteColor = getNoteColor(state.colorIndex)
-
+    // --- CORREÇÃO AQUI ---
+    // Usamos 'noteId?.let { id -> ... }' para garantir que o 'id' é String (e não String?)
     LaunchedEffect(noteId) {
-        if (noteId != null) viewModel.loadNote(noteId)
+        noteId?.let { id ->
+            if (id != "new") {
+                viewModel.loadNote(id)
+            }
+        }
     }
 
     LaunchedEffect(state.isSaveSuccess) {
-        if (state.isSaveSuccess) onNavigateBack()
+        if (state.isSaveSuccess) {
+            viewModel.resetSaveState() // Limpa o estado
+            onNavigateBack()
+        }
     }
 
     Scaffold(
-        // O fundo do ecrã agora muda conforme a cor escolhida!
-        containerColor = currentNoteColor,
+        containerColor = MaterialTheme.colorScheme.background,
 
         topBar = {
             Row(
@@ -66,37 +59,34 @@ fun AddEditNoteScreen(
                     modifier = Modifier
                         .size(50.dp)
                         .clip(RoundedCornerShape(15.dp))
-                        .background(Color.Black.copy(alpha = 0.1f)) // Fundo semitransparente para ver a cor da nota
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-
-                    // --- BOTÃO DE COR (NOVO) ---
-                    IconButton(
-                        onClick = { showColorSheet = true },
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(15.dp))
-                            .background(Color.Black.copy(alpha = 0.1f))
-                    ) {
-                        Icon(Icons.Default.Palette, contentDescription = "Color", tint = Color.Black)
-                    }
-
-                    // Botão GUARDAR
-                    IconButton(
-                        onClick = { viewModel.saveNote(noteId) },
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(15.dp))
-                            .background(Color.Black.copy(alpha = 0.1f))
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
-                        } else {
-                            Icon(Icons.Default.Check, contentDescription = "Save", tint = Color.Black)
-                        }
+                // Botão GUARDAR
+                IconButton(
+                    onClick = { viewModel.saveNote(noteId) },
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(15.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Save",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -110,20 +100,27 @@ fun AddEditNoteScreen(
                 .padding(horizontal = 24.dp)
         ) {
 
-            // TÍTULO
+            // 1. TÍTULO
             TextField(
                 value = state.title,
                 onValueChange = { viewModel.onTitleChange(it) },
                 placeholder = {
-                    Text("Title", style = TextStyle(fontSize = 48.sp, color = Color.Black.copy(alpha = 0.5f)))
+                    Text(
+                        "Title",
+                        style = TextStyle(fontSize = 48.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    )
                 },
-                textStyle = TextStyle(fontSize = 48.sp, color = Color.Black, fontWeight = FontWeight.Normal),
+                textStyle = TextStyle(
+                    fontSize = 48.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Normal
+                ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    cursorColor = Color.Black,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 )
@@ -131,58 +128,40 @@ fun AddEditNoteScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // CONTEÚDO
+            // 2. CONTEÚDO
             TextField(
                 value = state.content,
                 onValueChange = { viewModel.onContentChange(it) },
                 placeholder = {
-                    Text("Type something...", style = TextStyle(fontSize = 23.sp, color = Color.Black.copy(alpha = 0.5f)))
+                    Text(
+                        "Type something...",
+                        style = TextStyle(fontSize = 23.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    )
                 },
-                textStyle = TextStyle(fontSize = 23.sp, color = Color.Black, fontWeight = FontWeight.Normal),
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                textStyle = TextStyle(
+                    fontSize = 23.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Normal
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
-                    cursorColor = Color.Black,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
-        }
 
-        // --- MENU DE ESCOLHA DE COR (Bottom Sheet) ---
-        if (showColorSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showColorSheet = false },
-                containerColor = Color(0xFF252525) // Fundo escuro para contrastar com as cores claras
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Escolher cor da nota", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        itemsIndexed(NoteColors) { index, color ->
-                            Box(
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                                    .border(
-                                        width = if (state.colorIndex == index) 3.dp else 0.dp,
-                                        color = if (state.colorIndex == index) Color.White else Color.Transparent,
-                                        shape = CircleShape
-                                    )
-                                    .clickable {
-                                        viewModel.onColorChange(noteId, index)
-                                    }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
+            if (state.error != null) {
+                Text(
+                    text = state.error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
         }
     }
