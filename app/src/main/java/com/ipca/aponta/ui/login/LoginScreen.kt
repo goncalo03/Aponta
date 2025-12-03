@@ -32,90 +32,69 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val context = LocalContext.current // Necessário para o Popup (Toast)
+    val context = LocalContext.current
 
+    // Ler o UiState do ViewModel
+    val state = viewModel.uiState.value
+
+    // Inputs locais
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+
+    // Reagir ao sucesso
+    LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            Toast.makeText(context, "Login efetuado!", Toast.LENGTH_SHORT).show()
+            onLoginSuccess()
+            viewModel.resetState()
+        }
+    }
+
+    // Reagir ao erro
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // ... (Design do Ícone e Textos mantém-se igual) ...
-        Box(
-            modifier = Modifier.size(100.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(50.dp), tint = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text("Bem-vindo!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Faça login para continuar", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Inputs
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = email, onValueChange = { email = it },
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = password, onValueChange = { password = it },
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = null)
-                }
-            },
+            trailingIcon = { IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = null) } },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botão com Lógica de Popup
         Button(
-            onClick = {
-                isLoading = true
-                viewModel.login(
-                    email = email,
-                    pass = password,
-                    onSuccess = {
-                        isLoading = false
-                        // POPUP DE SUCESSO
-                        Toast.makeText(context, "Login efetuado com sucesso!", Toast.LENGTH_SHORT).show()
-                        onLoginSuccess()
-                    },
-                    onError = { error ->
-                        isLoading = false
-                        // POPUP DE ERRO
-                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-                    }
-                )
-            },
+            onClick = { viewModel.login(email, password) },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading
+            enabled = !state.isLoading
         ) {
-            if (isLoading) {
+            if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
                 Text(text = "Entrar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -123,8 +102,6 @@ fun LoginScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        TextButton(onClick = onNavigateToRegister) {
-            Text(text = "Ainda não tem conta? Registe-se")
-        }
+        TextButton(onClick = onNavigateToRegister) { Text("Ainda não tem conta? Registe-se") }
     }
 }

@@ -32,7 +32,10 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    val context = LocalContext.current // Contexto para o Popup
+    val context = LocalContext.current
+
+    // 1. Ler o Estado do ViewModel
+    val state = viewModel.uiState.value
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -40,7 +43,21 @@ fun RegisterScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+
+    // 2. Reagir ao SUCESSO
+    LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            Toast.makeText(context, "Registo efetuado com sucesso!", Toast.LENGTH_SHORT).show()
+            onRegisterSuccess()
+        }
+    }
+
+    // 3. Reagir ao ERRO
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -49,13 +66,13 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // ... (Design visual mantém-se) ...
         Box(
             modifier = Modifier.size(100.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(50.dp), tint = MaterialTheme.colorScheme.secondary)
         }
+
         Spacer(modifier = Modifier.height(24.dp))
         Text("Criar Conta", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Junta-te a nós", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -73,6 +90,7 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
         )
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -86,6 +104,7 @@ fun RegisterScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
         )
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = confirmPass,
             onValueChange = { confirmPass = it },
@@ -101,33 +120,18 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botão com Lógica
+        // Botão
         Button(
             onClick = {
-                isLoading = true
-                viewModel.register(
-                    email = email,
-                    pass = password,
-                    confirmPass = confirmPass,
-                    onSuccess = {
-                        isLoading = false
-                        // POPUP DE SUCESSO
-                        Toast.makeText(context, "Registo efetuado com sucesso!", Toast.LENGTH_SHORT).show()
-                        onRegisterSuccess()
-                    },
-                    onError = { error ->
-                        isLoading = false
-                        // POPUP DE ERRO
-                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-                    }
-                )
+                // Chama a função sem callbacks, pois o estado trata disso
+                viewModel.register(email, password, confirmPass)
             },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading,
+            enabled = !state.isLoading, // Bloqueia botão se estiver a carregar
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
-            if (isLoading) {
+            if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondary)
             } else {
                 Text(text = "Registar", fontSize = 16.sp, fontWeight = FontWeight.Bold)

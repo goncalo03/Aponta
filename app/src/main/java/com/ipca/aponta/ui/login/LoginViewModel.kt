@@ -1,47 +1,49 @@
 package com.ipca.aponta.ui.login
 
 import android.util.Patterns
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
+
+// 1. O Estado da UI (Dados agrupados)
+data class LoginUiState(
+    var isLoading: Boolean = false,
+    var error: String? = null,
+    var isSuccess: Boolean = false
+)
 
 class LoginViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
 
-    fun login(email: String, pass: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    // 2. A variável única que a UI vai observar
+    var uiState = mutableStateOf(LoginUiState())
+        private set
 
-        // 1. Verificar se está vazio (Básico)
-        if (email.isBlank() || pass.isBlank()) {
-            onError("Preencha todos os campos")
-            return
-        }
+    fun login(email: String, pass: String) {
+        // Reset do erro e ativa loading
+        uiState.value = uiState.value.copy(error = null, isLoading = true)
 
-        // 2. Verificar se o email é válido (Melhoria)
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            onError("O email introduzido não é válido")
+            uiState.value = uiState.value.copy(isLoading = false, error = "Email inválido")
             return
         }
-
-        // 3. Verificar tamanho da password (Melhoria)
         if (pass.length < 6) {
-            onError("A password deve ter pelo menos 6 caracteres")
+            uiState.value = uiState.value.copy(isLoading = false, error = "Password curta demais")
             return
         }
 
-        // 4. Tentar Login
         auth.signInWithEmailAndPassword(email, pass)
             .addOnSuccessListener {
-                onSuccess()
+                // Sucesso!
+                uiState.value = uiState.value.copy(isLoading = false, isSuccess = true)
             }
-            .addOnFailureListener { exception ->
-                // 5. Tratamento de Erros Específicos do Firebase (Melhoria)
-                val errorMessage = when (exception) {
-                    is FirebaseAuthInvalidUserException -> "Esta conta não existe."
-                    is FirebaseAuthInvalidCredentialsException -> "A password está incorreta."
-                    else -> "Erro no login: ${exception.localizedMessage}" // Erro genérico (ex: sem internet)
-                }
-                onError(errorMessage)
+            .addOnFailureListener { e ->
+                // Erro!
+                uiState.value = uiState.value.copy(isLoading = false, error = e.localizedMessage ?: "Erro no login")
             }
+    }
+
+    fun resetState() {
+        uiState.value = LoginUiState()
     }
 }

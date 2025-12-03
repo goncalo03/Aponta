@@ -6,14 +6,26 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.ipca.aponta.models.Note
+
+// Adicionamos 'searchQuery' ao estado
+data class NotesUiState(
+    val notes: List<Note> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val searchQuery: String = "" // <--- NOVO
+)
 
 class NotesViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    var isLoading by mutableStateOf(false)
+    private var noteListener: ListenerRegistration? = null
 
-    var notes by mutableStateOf<List<Note>>(emptyList())
+    // Lista completa em cache para não ir ao Firebase sempre que pesquisamos
+    private var allNotesCache: List<Note> = emptyList()
+
+    var uiState = mutableStateOf(NotesUiState())
         private set
 
     init {
@@ -21,41 +33,55 @@ class NotesViewModel : ViewModel() {
     }
 
     fun loadNotes() {
-        val userId = auth.currentUser?.uid ?: return
+        val currentUser = auth.currentUser ?: return
+        noteListener?.remove()
+        uiState.value = uiState.value.copy(isLoading = true)
 
-        isLoading = true
-
-        db.collection("notes")
-            .whereEqualTo("userId", userId)
-            .addSnapshotListener { snapshot, _ ->
-                // Desativa o loading quando chegam dados
-                isLoading = false
+        noteListener = db.collection("notes")
+            .whereEqualTo("userId", currentUser.uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    uiState.value = uiState.value.copy(isLoading = false, error = error.message)
+                    return@addSnapshotListener
+                }
 
                 if (snapshot != null) {
-                    notes = snapshot.documents.mapNotNull { doc ->
+                    val fetchedNotes = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(Note::class.java)?.copy(id = doc.id)
                     }.sortedByDescending { it.timestamp }
+
+                    // Guardamos a lista original
+                    allNotesCache = fetchedNotes
+
+                    // Atualizamos a UI (aplicando o filtro se já houver texto)
+                    updateFilteredList(uiState.value.searchQuery)
                 }
             }
     }
 
-    fun addNote(title: String, content: String, onSuccess: () -> Unit) {
-        val userId = auth.currentUser?.uid ?: return
-        val newDocRef = db.collection("notes").document()
-        val newNote = Note(id = newDocRef.id, title = title, content = content, userId = userId, timestamp = System.currentTimeMillis())
-        newDocRef.set(newNote).addOnSuccessListener { onSuccess() }
+    // --- NOVA FUNÇÃO DE PESQUISA ---
+    fun onSearchQueryChange(query: String) {
+        updateFilteredList(query)
     }
 
-    fun updateNote(noteId: String, title: String, content: String, onSuccess: () -> Unit) {
-        val updates = mapOf("title" to title, "content" to content, "timestamp" to System.currentTimeMillis())
-        db.collection("notes").document(noteId).update(updates).addOnSuccessListener { onSuccess() }
-    }
+    private fun updateFilteredList(query: String) {
+        val filtered = if (query.isBlank()) {
+            allNotesCache
+        } else {
+            allNotesCache.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                        it.content.contains(query, ignoreCase = true)
+            }
+        }
 
-    fun deleteNote(noteId: String) {
-        db.collection("notes").document(noteId).delete()
+        uiState.value = uiState.value.copy(
+            searchQuery = query,
+            notes = filtered,
+            isLoading = false
+        )
     }
-
-    fun getNoteById(noteId: String): Note? {
-        return notes.find { it.id == noteId }
+    override fun onCleared() {
+        super.onCleared()
+        noteListener?.remove()
     }
 }

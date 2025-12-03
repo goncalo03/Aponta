@@ -1,26 +1,33 @@
 package com.ipca.aponta.ui.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ipca.aponta.ui.notes.NoteCard
 import com.ipca.aponta.viewmodels.NotesViewModel
 
@@ -28,10 +35,13 @@ import com.ipca.aponta.viewmodels.NotesViewModel
 fun HomeScreen(
     viewModel: NotesViewModel,
     onAddNoteClick: () -> Unit,
-    onNoteClick: (String) -> Unit
+    onNoteClick: (String) -> Unit,
+    onProfileClick: () -> Unit // <--- Novo Callback
 ) {
-    val notes = viewModel.notes
-    val isLoading = viewModel.isLoading
+    val state = viewModel.uiState.value
+
+    // Estado local para saber se estamos em modo de pesquisa
+    var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -39,37 +49,127 @@ fun HomeScreen(
                 onClick = onAddNoteClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.offset(y = 50.dp)
+                shape = CircleShape,
+                modifier = Modifier.size(70.dp)
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Nova Nota")
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(32.dp))
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (notes.isEmpty()) {
-                Text(
-                    text = "Não tens notas.\nClica no + para criar!",
-                    modifier = Modifier.align(Alignment.Center),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+            // --- CABEÇALHO DINÂMICO ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isSearchActive) {
+                    // --- BARRA DE PESQUISA ---
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(15.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        BasicTextField(
+                            value = state.searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChange(it) }, // Filtra no ViewModel
+                            singleLine = true,
+                            textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp),
+                            modifier = Modifier.weight(1f),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                        )
+                        if (state.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Botão para fechar a pesquisa
+                    TextButton(onClick = {
+                        isSearchActive = false
+                        viewModel.onSearchQueryChange("") // Limpa o filtro ao sair
+                    }) {
+                        Text("Cancelar")
+                    }
+
+                } else {
+                    // --- TÍTULO E BOTÕES NORMAIS ---
+                    Text(
+                        text = "Notes",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // Botão Search (Ativa o modo pesquisa)
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(15.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { isSearchActive = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+
+                        // Botão Perfil (Antigo Info)
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(15.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onProfileClick() }, // Vai para o Perfil
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // --- LISTA ---
+            if (state.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (state.notes.isEmpty()) {
+                // Se estiver vazio, verifica se é por causa da pesquisa ou porque não há notas
+                val message = if (state.searchQuery.isNotEmpty()) "Nenhuma nota encontrada." else "Cria a tua primeira nota!"
+
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(imageVector = Icons.Default.Description, contentDescription = null, modifier = Modifier.size(100.dp), colorFilter = ColorFilter.tint(Color.Gray))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(text = message, color = Color.Gray, style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Light))
+                    }
+                }
             } else {
-                // LISTA DE CARDS
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalItemSpacing = 8.dp,
+                    verticalItemSpacing = 16.dp,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(notes) { note ->
-                        // AQUI CHAMAMOS O CARD
-                        NoteCard(
-                            note = note,
-                            onClick = { onNoteClick(note.id) }
-                        )
+                    items(items = state.notes, key = { it.id }) { note ->
+                        NoteCard(note = note, onClick = { onNoteClick(note.id) })
                     }
                 }
             }
