@@ -13,13 +13,15 @@ data class NotesUiState(
     val notes: List<Note> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val searchQuery: String = ""
+    val searchQuery: String = "" // Texto da pesquisa
 )
 
 class NotesViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var noteListener: ListenerRegistration? = null
+
+    // Cache local com TODAS as notas (para filtrar rápido)
     private var allNotesCache: List<Note> = emptyList()
 
     var uiState = mutableStateOf(NotesUiState())
@@ -42,13 +44,12 @@ class NotesViewModel : ViewModel() {
         noteListener?.remove()
         uiState.value = uiState.value.copy(isLoading = true)
 
-        // BUSCAR: Minhas + Partilhadas + Pendentes
         val query = db.collection("notes")
             .where(
                 Filter.or(
                     Filter.equalTo("userId", user.uid),
                     Filter.arrayContains("sharedWith", user.email ?: ""),
-                    Filter.arrayContains("pendingShares", user.email ?: "") // <--- Inclui pendentes
+                    Filter.arrayContains("pendingShares", user.email ?: "")
                 )
             )
 
@@ -63,18 +64,41 @@ class NotesViewModel : ViewModel() {
                     doc.toObject(Note::class.java)?.copy(id = doc.id)
                 }.sortedByDescending { it.timestamp }
 
+                // 1. Guardamos tudo na cache
                 allNotesCache = fetchedNotes
+
+                // 2. Atualizamos a lista visível (aplicando filtro se houver texto escrito)
                 updateFilteredList(uiState.value.searchQuery)
             }
         }
     }
 
-    // --- NOVA FUNÇÃO: ACEITAR CONVITE ---
+    // --- PESQUISA ---
+    fun onSearchQueryChange(query: String) {
+        updateFilteredList(query)
+    }
+
+    private fun updateFilteredList(query: String) {
+        val filtered = if (query.isBlank()) {
+            allNotesCache // Se vazio, mostra tudo
+        } else {
+            // Filtra por Título OU Conteúdo
+            allNotesCache.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                        it.content.contains(query, ignoreCase = true)
+            }
+        }
+
+        uiState.value = uiState.value.copy(
+            searchQuery = query,
+            notes = filtered,
+            isLoading = false
+        )
+    }
+
+    // --- AÇÕES ---
     fun acceptInvite(note: Note) {
         val myEmail = auth.currentUser?.email ?: return
-
-        // 1. Remove dos pendentes
-        // 2. Adiciona aos partilhados
         db.collection("notes").document(note.id).update(
             mapOf(
                 "pendingShares" to FieldValue.arrayRemove(myEmail),
@@ -83,31 +107,10 @@ class NotesViewModel : ViewModel() {
         )
     }
 
-    // --- NOVA FUNÇÃO: RECUSAR CONVITE ---
     fun declineInvite(note: Note) {
         val myEmail = auth.currentUser?.email ?: return
-        // Apenas remove dos pendentes
         db.collection("notes").document(note.id)
             .update("pendingShares", FieldValue.arrayRemove(myEmail))
-    }
-
-    // ... (Restantes funções: onSearchQueryChange, updateFilteredList, etc. mantêm-se iguais) ...
-    // Copia as do ficheiro anterior para aqui se necessário
-
-    fun onSearchQueryChange(query: String) {
-        updateFilteredList(query)
-    }
-
-    private fun updateFilteredList(query: String) {
-        val filtered = if (query.isBlank()) {
-            allNotesCache
-        } else {
-            allNotesCache.filter {
-                it.title.contains(query, ignoreCase = true) ||
-                        it.content.contains(query, ignoreCase = true)
-            }
-        }
-        uiState.value = uiState.value.copy(searchQuery = query, notes = filtered, isLoading = false)
     }
 
     override fun onCleared() {
