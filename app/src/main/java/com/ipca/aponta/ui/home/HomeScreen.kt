@@ -177,12 +177,8 @@ fun HomeScreen(
                             note = note,
                             currentUserEmail = currentUserEmail,
                             onClick = {
-                                // *** CORREÇÃO AQUI ***
-                                // 1. Limpa o texto da pesquisa
                                 viewModel.onSearchQueryChange("")
-                                // 2. Fecha a barra de pesquisa
                                 isSearchActive = false
-                                // 3. Navega para os detalhes
                                 onNoteClick(note.id)
                             },
                             onAccept = { viewModel.acceptInvite(note) },
