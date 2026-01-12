@@ -1,4 +1,4 @@
-# Projeto: Jogos de Plataformas Móveis — Relatório para Defesa
+# Projeto: Aponta — Relatório para Defesa (Aplicação Android)
 
 - **Autor:** (seu nome)
 - **Curso:** (nome do curso)
@@ -7,89 +7,92 @@
 
 ## Resumo
 
-Este projeto apresenta um jogo de plataformas desenvolvido para dispositivos móveis com o objetivo de aplicar conceitos de desenvolvimento Android, design de jogos e interação móvel. O relatório descreve objetivos, arquitetura, metodologias, principais funcionalidades, resultados alcançados e recomendações para a apresentação de defesa.
+Este repositório contém a aplicação Android "Aponta" (pacote `com.ipca.aponta`). Trata‑se de uma aplicação móvel desenvolvida para (descrever objetivo principal: ex. gestão de apontamentos, localização de pontos de interesse, apoio a fichas de campo, etc.). O relatório documenta objetivos, arquitetura, metodologias, funcionalidades implementadas, resultados e orientações para a apresentação de defesa.
 
 ## Objetivos
 
-- **Geral:** Desenvolver um protótipo de jogo de plataformas para Android, funcional e demonstrável.
+- **Geral:** Entregar uma aplicação Android funcional que resolva o problema definido pelo enunciado (substituir pelo objetivo concreto do projeto).
 - **Específicos:**
-  - Implementar mecânicas de movimento, colisão e física simples.
-  - Criar níveis e elementos gráficos coerentes com a jogabilidade.
-  - Garantir que o jogo rode em dispositivos móveis com desempenho aceitável.
+  - Implementar fluxo(s) principais da aplicação (ex.: autenticação, gestão de itens, visualização, sincronização).
+  - Garantir usabilidade adequada em dispositivos móveis.
   - Documentar a arquitetura e as escolhas técnicas.
 
 ## Metodologia
 
-- Ciclo de desenvolvimento iterativo: planeamento → implementação → testes → refinamento.
+- Desenvolvimento iterativo com pequenas entregas e testes manuais.
 - Ferramentas: Android Studio, Kotlin, Gradle.
-- Estratégia de teste: testes manuais em emuladores e em dispositivos reais, validação de performance e usabilidade.
+- Testes: testes manuais em emulador e dispositivo real; verificação de performance básica e usabilidade.
 
 ## Arquitetura do Sistema
 
-- Aplicação Android com estrutura modularizada no pacote `app`.
-- Principais componentes:
-  - Camada de apresentação: telas e UI (Jetpack Compose / Views conforme o projeto).
-  - Lógica de jogo: classes responsáveis por mecânicas, física e estados do jogo.
-  - Recursos: imagens, sons, níveis e configurações em `res/`.
+- Aplicação Android organizada no módulo `app`.
+- Principais camadas e componentes:
+  - UI: Activities/Fragments ou Jetpack Compose para ecrãs e navegação.
+  - Camada de domínio: lógica de negócios e casos de uso.
+  - Persistência: armazenamento local (ex.: Room/SharedPreferences/files) e/ou sincronização remota se aplicável.
+  - Recursos: imagens, strings e layouts em `res/`.
 
-Breve diagrama (texto):
+Diagrama (texto):
 
-App UI ↔ GameController ↔ PhysicsEngine
+UI ↔ ViewModel/Controller ↔ Repositório ↔ (Local DB / API)
 
 ## Tecnologias e Bibliotecas
 
 - Kotlin
 - Android SDK
 - Gradle
-- (Listar outras libs usadas: ex. Jetpack, libs de áudio, etc.)
+- (Adicionar bibliotecas específicas usadas: Jetpack, Retrofit, Room, Coroutines, etc.)
 
-## Implementação — Funcionalidades Principais
+## Funcionalidades Principais (exemplos — ajuste conforme o projeto)
 
-- Movimentação do jogador (andar, pular)
-- Detecção de colisões com plataformas e obstáculos
-- Sistema de pontuação/vidas
-- Múltiplos níveis (design básico)
-- Menus: início, pausa, e fim de jogo
+- Ecrã inicial com listagem de itens/registos
+- Detalhe de item e ações CRUD (criar/editar/apagar)
+- Pesquisa e filtragem
+- Persistência local e sincronização (se aplicável)
+- Configurações e gestão de conta (autenticação se existir)
+
+Se a app tiver funcionalidades específicas (mapas, câmaras, sensores), substitua/adicione aqui.
 
 ## Demonstração para a Defesa
 
-Sugestões para apresentação prática (3–5 minutos):
+Roteiro sugerido (3–6 minutos):
 
-1. Abrir a aplicação e mostrar o menu inicial.
-2. Demonstrar jogabilidade: movimento, salto e reação a obstáculos.
-3. Explicar rapidamente a arquitetura do código e uma ou duas decisões técnicas relevantes (ex.: porquê usar X abordagem para colisões).
-4. Mostrar um problema que foi resolvido durante o desenvolvimento e como foi abordado.
+1. Apresentar objetivo da aplicação e o problema que resolve.
+2. Abrir a app e navegar pelo fluxo principal (ex.: criar e visualizar um registo).
+3. Demonstrar funcionalidades chave (pesquisa, edição, sincronização, mapa, etc.).
+4. Explicar uma decisão técnica relevante (ex.: escolha de arquitetura, persistência ou comunicação com backend).
+5. Mostrar um desafio resolvido durante o desenvolvimento e o resultado.
 
-Pontos a destacar ao avaliador:
+Pontos a reforçar durante a defesa:
 
-- Robustez das mecânicas básicas
-- Responsividade em dispositivo móvel
-- Clareza do código e modularidade
+- Usabilidade e fluxo do utilizador
+- Robustez e tratamento de erros
+- Organização do código e separação de responsabilidades
 
 ## Resultados e Avaliação
 
-- Estado atual: protótipo funcional com N níveis e mecânicas essenciais.
-- Métricas observadas: taxa de frames média (se medida), uso de memória aproximado em testes.
-- Limitações conhecidas: IA básica, número limitado de níveis, ausência de persistência avançada.
+- Estado atual: aplicação funcional com as features listadas acima (substituir por estado real: número de telas, features implementadas).
+- Métricas observadas: tempos de resposta, utilização aproximada de memória, estabilidade em testes manuais.
+- Limitações conhecidas: (indicar limitações como falta de testes automatizados, ausência de API, etc.)
 
 ## Conclusões
 
-O projeto demonstra a integração de conceitos de desenvolvimento Android e design de jogos, resultando num protótipo jogável que cumpre os objetivos principais. A experiência permitiu consolidar conhecimentos em programação Kotlin, ciclo de vida Android e otimização de desempenho para mobile.
+A aplicação demonstra a implementação dos requisitos principais e a capacidade de projetar um fluxo móvel consistente. O desenvolvimento permitiu consolidar conhecimentos em Kotlin, ciclo de vida Android e práticas de arquitetura.
 
 ## Trabalhos Futuros
 
-- Adicionar níveis adicionais e sistema de progressão
-- Implementar salvamento de estado (persistência)
-- Melhorar física e IA dos inimigos
-- Polir gráficos, animações e efeitos sonoros
+- Implementar testes automatizados (unit/instrumentation)
+- Melhorar experiência do utilizador (UI/UX) e acessibilidade
+- Adicionar persistência remota ou autenticação, se aplicável
+- Otimizações de performance e perfilamento
 
 ## Instruções para Executar (Resumo Rápido)
 
-Requisitos: Android Studio 2020+ e Android SDK compatível.
+Requisitos: Android Studio e Android SDK compatível.
 
 1. Abrir a pasta do projeto no Android Studio.
 2. Sincronizar o Gradle.
-3. Conectar um dispositivo Android ou usar um emulador.
+3. Conectar um dispositivo Android ou abrir um emulador.
 4. Executar a app a partir do Android Studio ou usar o Gradle:
 
 ```bash
@@ -101,12 +104,125 @@ No Windows, use `gradlew.bat` em vez de `./gradlew`.
 
 ## Referências
 
-- (Listar artigos, tutoriais e documentação consultada)
+- (Adicionar documentação, artigos e tutoriais usados)
 
 ## Anexos
 
-- Incluir capturas de ecrã e vídeos da jogabilidade em `app/src/main/res/` ou numa pasta `assets/docs/`.
+- Incluir capturas de ecrã e vídeos da aplicação em `assets/docs/` ou `docs/`.
 
 ---
 
-Se quiser, posso adaptar este relatório — por exemplo preenchendo os campos em falta (nome, orientador), adicionando métricas concretas, ou incluindo imagens/screenshots. Quer que eu adicione automaticamente imagens ou que eu faça commit do ficheiro agora?
+Notas: substitua as secções com exemplos por descrições concretas da sua app (funcionalidades reais, métricas e imagens). Se quiser, eu posso preencher automaticamente os campos com base no código do projeto — por exemplo extraindo o `applicationId` de `build.gradle.kts`, listando dependências usadas e inserindo capturas de ecrã encontradas no `res/`.
+
+## Estrutura do projecto
+
+- `app/` — módulo principal Android com código fonte, recursos e configuração do Gradle.
+- `app/src/main/java/com/ipca/aponta/` — código fonte Kotlin (actividades, fragments, viewmodels, adaptadores).
+- `app/src/main/res/` — recursos (layouts, drawables, strings, imagens).
+- `app/build.gradle.kts` — configuração do módulo (dependências, applicationId).
+- `gradle/` e ficheiros de configuração na raiz (`settings.gradle.kts`, `gradle.properties`) — configuração de build.
+
+Organização proposta das packages (exemplo):
+
+- `ui` — ecrãs e componentes de interface (`home`, `detail`, `settings`)
+- `data` — fontes de dados, repositorios, mapeamentos
+- `domain` — casos de uso e modelos de domínio
+- `utils` — helpers e utilitários
+
+## Lista de funcionalidades da aplicação
+
+- Navegação entre ecrãs principais (lista, detalhe, criação/edição)
+- CRUD de registos (criar, ler, atualizar, apagar)
+- Pesquisa e filtragem de itens
+- Persistência local (ex.: Room) e gestão de configurações
+- Notificações locais ou sincronização (se aplicável)
+- Autenticação e gestão de utilizadores (se implementado)
+
+Adicione/ajuste esta lista com as funcionalidades concretas da sua app.
+
+## Desenhos, esquemas e protótipos da aplicação
+
+- Protótipos de ecrã: incluir imagens ou links para protótipos (Figma, imagens em `docs/` ou `assets/docs/`).
+- Wireframes simples:
+
+  - Ecrã Inicial: lista de registos + botão de ação (CRUD)
+  - Ecrã Detalhe: campos do registo + ações (editar, eliminar)
+  - Ecrã Configurações: opções do utilizador
+
+Placeholder para imagens:
+
+![Wireframe Home](docs/wireframe-home.png)  
+![Wireframe Detalhe](docs/wireframe-detail.png)
+
+Se não existir ainda, crie a pasta `docs/` e coloque aí os protótipos ou screenshots.
+
+## Modelo de dados
+
+Exemplo de modelo de dados (entidades principais):
+
+- `Item` {
+  - `id`: Long
+  - `title`: String
+  - `description`: String
+  - `createdAt`: DateTime
+  - `updatedAt`: DateTime
+}
+
+- `User` (se aplicável) {
+  - `id`: Long
+  - `username`: String
+  - `email`: String
+}
+
+ER (texto):
+
+`User` 1 — N `Item`
+
+Sugestão: adicionar um diagrama ER em `docs/modelo-dados.png` ou gerar um `.drawio` para anexar.
+
+## Implementação do projecto
+
+- Padrão arquitetural: (ex.: MVVM com ViewModel + Repository)
+- Fluxo de dados: UI → ViewModel → Repositório → Fonte de dados (Room / API)
+- Principais classes/ficheiros a referir na defesa:
+  - `MainActivity` / `NavHost` — pontos de entrada e navegação
+  - `HomeScreen` / `HomeViewModel` — ecrã principal e lógica de apresentação
+  - `Repository` / `Dao` — acesso a dados locais
+
+Trechos técnicos que pode destacar:
+
+- Como é feita a persistência local (Room / SharedPreferences)
+- Como são tratados os erros e os estados de carregamento (Sealed classes / Resource wrappers)
+- Estratégia de gestão de dependências e injeção (ex.: Hilt/Koin ou factory simples)
+
+## Tecnologias usadas
+
+- Linguagem: Kotlin
+- IDE/Build: Android Studio, Gradle (Kotlin DSL)
+- Bibliotecas (exemplos a listar concretamente):
+  - Jetpack (Lifecycle, ViewModel, Navigation)
+  - Room (persistência local)
+  - Retrofit / OkHttp (comunicação HTTP, se houver)
+  - Coroutines / Flow (concorrência)
+  - Hilt ou Koin (injeção de dependências)
+
+Consulte `app/build.gradle.kts` para a lista completa de dependências.
+
+## Dificuldades
+
+- Integração de bibliotecas e resolução de conflitos de dependências.
+- Garantir comportamento consistente entre emulador e dispositivo real.
+- Implementação de sincronização remota (se aplicável) e gestão de situações offline.
+- Tempo limitado para polir UI/UX e escrever testes automatizados.
+
+Descreva aqui problemas concretos que surgiram no projeto e como foram resolvidos.
+
+## Conclusões
+
+- O projecto demonstra um fluxo de desenvolvimento Android completo: especificação, implementação, validação manual e documentação.
+- Pontos fortes: arquitetura modular, funcionalidades principais implementadas, código organizado para manutenção.
+- Pontos a melhorar: testes automatizados, maior cobertura de funcionalidades, polimento de UX e persistência remota.
+
+---
+
+Se quiser, faço agora uma verificação automática do código para preencher: `applicationId`, lista de dependências em `build.gradle.kts`, e procurar screenshots em `app/src/main/res/` para anexar ao `docs/`. Quer que proceda com isso?
